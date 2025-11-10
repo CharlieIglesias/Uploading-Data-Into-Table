@@ -1,0 +1,122 @@
+' Module
+' Coded in VBA
+' Used for 2 buttons (Col D / Col K)
+
+Option Explicit
+
+' Constants
+
+' Sheet protection password
+Const PROTECT_PWD As String = "abc"       
+
+' Input ranges on the source sheet
+Const RANGE_D_INPUT As String = "D6:D11"
+Const RANGE_K_INPUT As String = "K6:K10"
+
+' Ranges to clear after writing
+Const CLEAR_D As String = "D9,D10,D12"
+Const CLEAR_K As String = "K9:K12"
+
+' Starting row for reading data
+Const START_ROW As Long = 5
+
+' Source columns (D = 4, K = 11)
+Const COL_D As Long = 4
+Const COL_K As Long = 11
+
+ ' Main Macro
+
+Private Sub WriteToTable( _
+    sourceName As String, _
+    targetName As String, _
+    tblName As String, _
+    inputRange As String, _
+    sourceCol As Long, _
+    clearRange As String)
+
+    Dim wsSource As Worksheet
+    Dim wsTarget As Worksheet
+    Dim tbl As ListObject
+    Dim newRow As ListRow
+    Dim cell As Range
+    Dim i As Long
+
+    ' Prevent overlapping runs
+    If Sheets("Information").Range("H1").Value = "Running" Then
+        MsgBox "Process already running", vbExclamation
+        Exit Sub
+    End If
+    Sheets("Information").Range("H1").Value = "Running"
+
+    On Error GoTo ErrHandler
+
+    ' Identify source + target sheets and table
+    Set wsSource = ThisWorkbook.Sheets(sourceName)
+    Set wsTarget = ThisWorkbook.Sheets(targetName)
+    Set tbl = wsTarget.ListObjects(tblName)
+
+    ' Validate that all required cells are filled
+    For Each cell In wsSource.Range(inputRange)
+        If Trim(cell.Value) = "" Then
+            MsgBox "Required field blank: " & cell.Address(False, False), vbCritical
+            GoTo SafeExit
+        End If
+    Next cell
+
+    ' Temporarily unprotect target sheet
+    wsTarget.Unprotect Password:=PROTECT_PWD
+
+    ' Add a new row to the table
+    Set newRow = tbl.ListRows.Add
+
+    ' Transfer 7 cells from the source range to the new row
+    For i = 1 To 7
+        newRow.Range(1, i).Value = wsSource.Cells(START_ROW + i, sourceCol).Value
+    Next i
+
+    ' Clear source input cells and mark completion
+    wsSource.Range(clearRange).ClearContents
+    wsSource.Range("D11").Value = "1"
+
+    MsgBox "Data Added.", vbInformation
+    GoTo SafeExit
+
+' Error Handler
+ErrHandler:
+    MsgBox "Unexpected Error: " & Err.Description, vbCritical
+
+
+' Clean Exit
+SafeExit:
+    On Error Resume Next
+    wsTarget.Protect Password:=PROTECT_PWD
+    Sheets("Information").Range("H1").Value = ""
+End Sub
+
+
+' Marco for Column D (Core Tasks)
+' Reads from column D and writes to target table
+
+Sub MoveToTable(sourceName As String, targetName As String, tblName As String)
+    Call WriteToTable( _
+        sourceName, _
+        targetName, _
+        tblName, _
+        RANGE_D_INPUT, _
+        COL_D, _
+        CLEAR_D)
+End Sub
+
+
+' Macro for Column K (Additional Tasks)
+' Reads from column K and writes to target table
+
+Sub AddMoveToTable(sourceName As String, targetName As String, tblName As String)
+    Call WriteToTable( _
+        sourceName, _
+        targetName, _
+        tblName, _
+        RANGE_K_INPUT, _
+        COL_K, _
+        CLEAR_K)
+End Sub
