@@ -4,27 +4,28 @@
 
 Option Explicit
 
-' Constants
+' ===== CONSTANTS =====
 
-' Sheet protection password
-Const PROTECT_PWD As String = "abc"       
+Const PROTECT_PWD As String = "OnbKYC"            
 
-' Input ranges on the source sheet
+' Source input ranges
 Const RANGE_D_INPUT As String = "D6:D11"
 Const RANGE_K_INPUT As String = "K6:K10"
 
-' Ranges to clear after writing
+' Clear ranges
 Const CLEAR_D As String = "D9,D10,D12"
 Const CLEAR_K As String = "K9:K12"
 
-' Starting row for reading data
 Const START_ROW As Long = 5
 
-' Source columns (D = 4, K = 11)
 Const COL_D As Long = 4
 Const COL_K As Long = 11
 
- ' Main Macro
+Const STATUS_SHEET As String = "Information"
+Const STATUS_CELL As String = "H1"
+
+Const QUANT_CELL As String = "D11"
+
 
 Private Sub WriteToTable( _
     sourceName As String, _
@@ -34,28 +35,26 @@ Private Sub WriteToTable( _
     sourceCol As Long, _
     clearRange As String)
 
-    Dim wsSource As Worksheet
-    Dim wsTarget As Worksheet
-    Dim tbl As ListObject
-    Dim newRow As ListRow
+    Dim wsSource As Worksheet, wsTarget As Worksheet
+    Dim tbl As ListObject, newRow As ListRow
     Dim cell As Range
     Dim i As Long
 
-    ' Prevent overlapping runs
-    If Sheets("Information").Range("H1").Value = "Running" Then
+    ' Check if already running
+    If Sheets(STATUS_SHEET).Range(STATUS_CELL).Value = "Running" Then
         MsgBox "Process already running", vbExclamation
         Exit Sub
     End If
-    Sheets("Information").Range("H1").Value = "Running"
+    Sheets(STATUS_SHEET).Range(STATUS_CELL).Value = "Running"
 
     On Error GoTo ErrHandler
 
-    ' Identify source + target sheets and table
-    Set wsSource = ThisWorkbook.Sheets(sourceName)
-    Set wsTarget = ThisWorkbook.Sheets(targetName)
+    ' Set objects
+    Set wsSource = Sheets(sourceName)
+    Set wsTarget = Sheets(targetName)
     Set tbl = wsTarget.ListObjects(tblName)
 
-    ' Validate that all required cells are filled
+    ' Validate required fields
     For Each cell In wsSource.Range(inputRange)
         If Trim(cell.Value) = "" Then
             MsgBox "Required field blank: " & cell.Address(False, False), vbCritical
@@ -63,60 +62,40 @@ Private Sub WriteToTable( _
         End If
     Next cell
 
-    ' Temporarily unprotect target sheet
-    wsTarget.Unprotect Password:=PROTECT_PWD
-
-    ' Add a new row to the table
+    ' Unprotect + add row
+    wsTarget.Unprotect PROTECT_PWD
     Set newRow = tbl.ListRows.Add
 
-    ' Transfer 7 cells from the source range to the new row
+    ' Write 7 values
     For i = 1 To 7
         newRow.Range(1, i).Value = wsSource.Cells(START_ROW + i, sourceCol).Value
     Next i
 
-    ' Clear source input cells and mark completion
+    ' Clear inputs
     wsSource.Range(clearRange).ClearContents
-    wsSource.Range("D11").Value = "1"
+    wsSource.Range(QUANT_CELL).Value = "1"
 
-    MsgBox "Data Added.", vbInformation
-    GoTo SafeExit
+    MsgBox "Data successfully added.", vbInformation
 
-' Error Handler
-ErrHandler:
-    MsgBox "Unexpected Error: " & Err.Description, vbCritical
-
-
-' Clean Exit
 SafeExit:
     On Error Resume Next
-    wsTarget.Protect Password:=PROTECT_PWD
-    Sheets("Information").Range("H1").Value = ""
+    wsTarget.Protect PROTECT_PWD
+    Sheets(STATUS_SHEET).Range(STATUS_CELL).Value = ""
+    Exit Sub
+
+ErrHandler:
+    MsgBox "Error: " & Err.Description, vbCritical
+    Resume SafeExit
+
 End Sub
 
 
-' Marco for Column D (Core Tasks)
-' Reads from column D and writes to target table
+Sub BauUpload(sourceName As String, targetName As String, tblName As String)
+    WriteToTable sourceName, targetName, tblName, RANGE_D_INPUT, COL_D, CLEAR_D
+End Sub
 
-Sub MoveToTable(sourceName As String, targetName As String, tblName As String)
-    Call WriteToTable( _
-        sourceName, _
-        targetName, _
-        tblName, _
-        RANGE_D_INPUT, _
-        COL_D, _
-        CLEAR_D)
+Sub AdhocUpload(sourceName As String, targetName As String, tblName As String)
+    WriteToTable sourceName, targetName, tblName, RANGE_K_INPUT, COL_K, CLEAR_K
 End Sub
 
 
-' Macro for Column K (Additional Tasks)
-' Reads from column K and writes to target table
-
-Sub AddMoveToTable(sourceName As String, targetName As String, tblName As String)
-    Call WriteToTable( _
-        sourceName, _
-        targetName, _
-        tblName, _
-        RANGE_K_INPUT, _
-        COL_K, _
-        CLEAR_K)
-End Sub
