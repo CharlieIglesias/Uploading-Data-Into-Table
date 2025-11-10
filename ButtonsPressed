@@ -4,11 +4,12 @@
 
 ' For D-column process
 Sub Agent1a(("1", "Data 1", "Tab1a")
-Call MoveToTable("SourceSheetName", "TargetSheetName", "TableName")
+Call BauUpload("SourceSheetName", "TargetSheetName", "TableName")
 End Sub
 
 
 ' For K-column process
 Sub Agent1b(("1", "Data 1", "Tab1b")
-Call AddMoveToTable("SourceSheetName", "TargetSheetName", "TableName")
+Call AdhocUpload("SourceSheetName", "TargetSheetName", "TableName")
 End Sub
+
