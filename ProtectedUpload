@@ -26,6 +26,7 @@ Const STATUS_CELL As String = "H1"
 
 Const QUANT_CELL As String = "D11"
 
+' ===== CORE SUB =====
 
 Private Sub WriteToTable( _
     sourceName As String, _
@@ -89,13 +90,14 @@ ErrHandler:
 
 End Sub
 
+' ===== INTIALISING SUBS ======
 
 Sub BauUpload(sourceName As String, targetName As String, tblName As String)
-    WriteToTable sourceName, targetName, tblName, RANGE_D_INPUT, COL_D, CLEAR_D
+    Call WriteToTable(sourceName, targetName, tblName, RANGE_D_INPUT, COL_D, CLEAR_D)
 End Sub
 
 Sub AdhocUpload(sourceName As String, targetName As String, tblName As String)
-    WriteToTable sourceName, targetName, tblName, RANGE_K_INPUT, COL_K, CLEAR_K
+    Call WriteToTable(sourceName, targetName, tblName, RANGE_K_INPUT, COL_K, CLEAR_K)
 End Sub
 
 
