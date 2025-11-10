@@ -6,11 +6,11 @@ Option Explicit
 
 ' ===== CONSTANTS =====
 
-Const PROTECT_PWD As String = "OnbKYC"            
+Const PROTECT_PWD As String = "abc"            
 
 ' Source input ranges
-Const RANGE_D_INPUT As String = "D6:D11"
-Const RANGE_K_INPUT As String = "K6:K10"
+Const RANGE_D_INPUT As String = "D6:D12"
+Const RANGE_K_INPUT As String = "K6:K12"
 
 ' Clear ranges
 Const CLEAR_D As String = "D9,D10,D12"
